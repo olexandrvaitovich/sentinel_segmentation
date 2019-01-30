@@ -68,8 +68,8 @@ import cv2
 
 def prepare_data(x_folder, y_folder):
     
-    masks = glob.glob("y_train/*.tif")
-    images = glob.glob("x2_train/*.tif")
+    masks = glob.glob("{}/*.tif".format(y_folder))
+    images = glob.glob("{}/*.tif".format(x_folder))
     
     listx = []
     listy = []
@@ -83,16 +83,21 @@ def prepare_data(x_folder, y_folder):
         not_empty = np.count_nonzero(mask)
         
         #image is added if it is not just a black square
-        if not_empty>200:
+        if not_empty>38000:
             
             listy+=[mask]
             listx+=[cv2.imread(images[i])]
             
             not_empty = 0
-            
     return np.array(listx)/255, np.delete(np.array(listy), [1, 2], 3)>240
 
-x, y = prepare_data("x2_train", "y_train")
-model = unet()
+x, y = prepare_data("x_train", "y_train")
+x2, y = prepare_data("x2_train", "y_train")
+x3, y = prepare_data("x3_train", "y_train")
+x4, y = prepare_data("x4_train", "y_train")
+xx = np.concatenate((x, np.delete(x2, [1,2], 3)), axis=3)
+xx2 = np.concatenate((x3, np.delete(x4, [1,2], 3)), axis=3)
+xxx = np.concatenate((xx, xx2), axis=3)
 
-model.fit(x, y, batch_size=4, epochs=1, verbose=10, validation_split=0.1)
+model2 = unet() 
+model2.fit(xxx, y, batch_size=4, epochs=10, verbose=1, validation_split=0.1)
